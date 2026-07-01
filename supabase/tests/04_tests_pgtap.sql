@@ -27,9 +27,11 @@ $$;
 
 -- Jeux d'essai : 3 utilisateurs (owner, editor, tiers) déjà présents dans auth.users/profiles.
 -- (seed minimal supposé chargé : u_owner, u_editor, u_third)
-\set u_owner  '11111111-1111-1111-1111-111111111111'
-\set u_editor '22222222-2222-2222-2222-222222222222'
-\set u_third  '33333333-3333-3333-3333-333333333333'
+-- UUID fixes inlinés directement dans les tests (psql n'interpole pas :'var'
+-- dans les corps dollar-quotés ; suppression des \set, incompatibles éditeur SQL) :
+--   u_owner  = 11111111-1111-1111-1111-111111111111
+--   u_editor = 22222222-2222-2222-2222-222222222222
+--   u_third  = 33333333-3333-3333-3333-333333333333
 
 -- ----------------------------------------------------------------------------
 -- 1A — Un utilisateur standard PEUT créer une entité de zéro (deadlock levé)
