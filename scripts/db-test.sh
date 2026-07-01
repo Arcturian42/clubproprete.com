@@ -32,7 +32,13 @@ echo "→ 3/4 Seed de test (3 utilisateurs)"
 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f "$ROOT/supabase/seed/seed_test.sql"
 
 echo "→ 4/4 Tests pgTAP (21 scénarios RLS & sécurité)"
+# pgTAP peut être pré-installé dans le schéma `extensions` sur Supabase ; le
+# fichier de tests référence un schéma `tests` (tests.act_as) qui n'existe pas
+# par défaut sur un projet nu. On garantit les deux, puis on exécute avec un
+# search_path qui couvre public + extensions + tests.
 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -c "create extension if not exists pgtap;"
-psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f "$ROOT/supabase/tests/04_tests_pgtap.sql"
+psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -c "create schema if not exists tests;"
+PGOPTIONS="--search_path=tests,public,extensions" \
+  psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f "$ROOT/supabase/tests/04_tests_pgtap.sql"
 
 echo "✅ Phase 0 SQL exécuté. Vérifier que les 21 tests sont au vert ci-dessus."
