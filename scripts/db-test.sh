@@ -28,6 +28,18 @@ psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f "$ROOT/supabase/migrations/0001_schem
 echo "→ 2/4 RLS (policies capacités, aucun claim role)"
 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f "$ROOT/supabase/migrations/0002_rls.sql"
 
+# Hors Supabase : appliquer les GRANTs que Supabase pose par défaut (default
+# privileges anon/authenticated/service_role sur public). La RLS reste le gate.
+if [ "${USE_AUTH_SHIMS:-0}" = "1" ]; then
+  echo "→ 2b   GRANTs public → anon/authenticated/service_role (hors Supabase)"
+  psql "$DATABASE_URL" -v ON_ERROR_STOP=1 <<'SQL'
+grant usage on schema public to anon, authenticated, service_role;
+grant select, insert, update, delete on all tables in schema public to anon, authenticated, service_role;
+grant usage, select on all sequences in schema public to anon, authenticated, service_role;
+grant execute on all functions in schema public to anon, authenticated, service_role;
+SQL
+fi
+
 echo "→ 3/4 Seed de test (3 utilisateurs)"
 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f "$ROOT/supabase/seed/seed_test.sql"
 
