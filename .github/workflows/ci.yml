@@ -1,0 +1,50 @@
+name: CI
+
+on:
+  push:
+    branches: [main, 'claude/**']
+  pull_request:
+
+jobs:
+  # ---- Qualité applicative : lint, typecheck, tests unitaires ----------------
+  app:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm typecheck
+      - run: pnpm lint
+      - run: pnpm test
+
+  # ---- Socle base : migrations + RLS + 21 tests pgTAP ------------------------
+  db:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgis/postgis:15-3.4
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd pg_isready --health-interval 10s
+          --health-timeout 5s --health-retries 5
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/postgres
+      # Postgres nu → injecter les shims auth/tests (le vrai Supabase les fournit).
+      USE_AUTH_SHIMS: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Installer pgTAP
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client postgresql-15-pgtap
+      - name: Exécuter le socle SQL + pgTAP
+        run: bash scripts/db-test.sh

@@ -1,0 +1,26 @@
+# Configuration Supabase CLI — ClubProprete.com
+# Projet de test lié : tefjghkoawbbvtypdeoe
+project_id = "tefjghkoawbbvtypdeoe"
+
+[db]
+major_version = 15
+
+[db.seed]
+enabled = true
+sql_paths = ["./seed/seed_test.sql"]
+
+[auth]
+enabled = true
+site_url = "http://localhost:3000"
+# Custom Access Token Hook — injecte le claim `capabilities` dans le JWT.
+# ⚠️ 3C : valider le format de retour de custom_access_token_hook contre la
+# version d'Auth installée AVANT de câbler la connexion (cf. docs/04-security-rls.md).
+[auth.hook.custom_access_token]
+enabled = true
+uri = "pg-functions://postgres/public/custom_access_token_hook"
+
+[storage]
+enabled = true
+
+[realtime]
+enabled = true
