@@ -4,6 +4,11 @@
 -- 46 tables (39 fonctionnelles + 7 infrastructure).
 -- ============================================================================
 
+-- Les helpers SECURITY DEFINER (language sql) sont définis avant les tables
+-- qu'ils référencent : on diffère la validation des corps de fonction (comme
+-- pg_dump), sinon « relation does not exist » à la création. Résolution au run.
+set check_function_bodies = off;
+
 -- ---------- EXTENSIONS ----------
 create extension if not exists pgcrypto;     -- gen_random_uuid()
 create extension if not exists postgis;      -- géo (geography point, distance)
@@ -108,6 +113,22 @@ as $$
     select 1 from public.blocks b
     where b.blocker_id = p_blocker_id
       and b.blocked_id = p_blocked_id
+  );
+$$;
+
+-- entity_has_members : l'entité a-t-elle DÉJÀ au moins un membre ?
+-- SECURITY DEFINER indispensable : utilisé dans la policy emembers_insert (1B).
+-- Un sous-select inline serait filtré par la RLS de entity_members (le candidat
+-- ne voit pas les membres existants) et laisserait un tiers s'auto-attribuer
+-- owner sur une entité déjà possédée. Le helper contourne la RLS pour vérifier.
+create or replace function public.entity_has_members(p_entity_id uuid)
+returns boolean
+language sql stable
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1 from public.entity_members m where m.entity_id = p_entity_id
   );
 $$;
 

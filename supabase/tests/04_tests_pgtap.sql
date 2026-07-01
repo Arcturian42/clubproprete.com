@@ -34,7 +34,7 @@ $$;
 -- ----------------------------------------------------------------------------
 -- 1A — Un utilisateur standard PEUT créer une entité de zéro (deadlock levé)
 -- ----------------------------------------------------------------------------
-select tests.act_as(:'u_owner');
+select tests.act_as('11111111-1111-1111-1111-111111111111');
 select lives_ok(
   $$ insert into public.entities(id, type, slug, status)
      values ('aaaaaaaa-0000-0000-0000-000000000001','company','net-lyon','active') $$,
@@ -45,75 +45,75 @@ select lives_ok(
 -- ----------------------------------------------------------------------------
 select lives_ok(
   $$ insert into public.entity_members(entity_id, user_id, role, invite_status)
-     values ('aaaaaaaa-0000-0000-0000-000000000001', :'u_owner'::uuid, 'owner', 'accepted') $$,
+     values ('aaaaaaaa-0000-0000-0000-000000000001', '11111111-1111-1111-1111-111111111111'::uuid, 'owner', 'accepted') $$,
   '1B : auto-attribution du rôle owner sur entité vierge réussit');
 
 -- Un SECOND utilisateur ne peut pas s'auto-attribuer owner (entité a déjà un membre)
-select tests.act_as(:'u_third');
+select tests.act_as('33333333-3333-3333-3333-333333333333');
 select throws_ok(
   $$ insert into public.entity_members(entity_id, user_id, role, invite_status)
-     values ('aaaaaaaa-0000-0000-0000-000000000001', :'u_third'::uuid, 'owner', 'accepted') $$,
+     values ('aaaaaaaa-0000-0000-0000-000000000001', '33333333-3333-3333-3333-333333333333'::uuid, 'owner', 'accepted') $$,
   NULL, '1B (neg) : un tiers ne peut pas s''auto-attribuer owner sur une entité déjà possédée');
 
 -- ----------------------------------------------------------------------------
 -- 2A — Un editor invité NE PEUT PAS se promouvoir owner
 -- ----------------------------------------------------------------------------
 -- L'owner invite un editor
-select tests.act_as(:'u_owner');
+select tests.act_as('11111111-1111-1111-1111-111111111111');
 select lives_ok(
   $$ insert into public.entity_members(entity_id, user_id, role, invite_status)
-     values ('aaaaaaaa-0000-0000-0000-000000000001', :'u_editor'::uuid, 'editor', 'accepted') $$,
+     values ('aaaaaaaa-0000-0000-0000-000000000001', '22222222-2222-2222-2222-222222222222'::uuid, 'editor', 'accepted') $$,
   '2A (setup) : l''owner invite un editor');
 
 -- L'editor tente de passer owner -> doit échouer (trigger guard_member_role)
-select tests.act_as(:'u_editor');
+select tests.act_as('22222222-2222-2222-2222-222222222222');
 select throws_ok(
   $$ update public.entity_members set role='owner'
-     where entity_id='aaaaaaaa-0000-0000-0000-000000000001' and user_id= :'u_editor'::uuid $$,
+     where entity_id='aaaaaaaa-0000-0000-0000-000000000001' and user_id= '22222222-2222-2222-2222-222222222222'::uuid $$,
   NULL, '2A : un editor ne peut pas se promouvoir owner');
 
 -- L'editor PEUT mettre à jour son invite_status (accepter) sans toucher au rôle
 select lives_ok(
   $$ update public.entity_members set invite_status='accepted'
-     where entity_id='aaaaaaaa-0000-0000-0000-000000000001' and user_id= :'u_editor'::uuid $$,
+     where entity_id='aaaaaaaa-0000-0000-0000-000000000001' and user_id= '22222222-2222-2222-2222-222222222222'::uuid $$,
   '2A : un editor peut mettre à jour son invite_status sans changer de rôle');
 
 -- ----------------------------------------------------------------------------
 -- 2B — L'émetteur d'une demande de connexion NE PEUT PAS l'auto-accepter
 -- ----------------------------------------------------------------------------
-select tests.act_as(:'u_owner');
+select tests.act_as('11111111-1111-1111-1111-111111111111');
 select lives_ok(
   $$ insert into public.connections(from_user_id, to_user_id, status)
-     values (:'u_owner'::uuid, :'u_third'::uuid, 'pending') $$,
+     values ('11111111-1111-1111-1111-111111111111'::uuid, '33333333-3333-3333-3333-333333333333'::uuid, 'pending') $$,
   '2B (setup) : demande de connexion créée en pending');
 
 -- from_user tente d'accepter sa propre demande -> refus (RLS : seul to_user)
 select throws_ok(
   $$ update public.connections set status='accepted'
-     where from_user_id= :'u_owner'::uuid and to_user_id= :'u_third'::uuid $$,
+     where from_user_id= '11111111-1111-1111-1111-111111111111'::uuid and to_user_id= '33333333-3333-3333-3333-333333333333'::uuid $$,
   NULL, '2B : l''émetteur ne peut pas auto-accepter la connexion');
 
 -- Le destinataire PEUT accepter
-select tests.act_as(:'u_third');
+select tests.act_as('33333333-3333-3333-3333-333333333333');
 select lives_ok(
   $$ update public.connections set status='accepted'
-     where from_user_id= :'u_owner'::uuid and to_user_id= :'u_third'::uuid $$,
+     where from_user_id= '11111111-1111-1111-1111-111111111111'::uuid and to_user_id= '33333333-3333-3333-3333-333333333333'::uuid $$,
   '2B : le destinataire peut accepter la connexion');
 
 -- ----------------------------------------------------------------------------
 -- 2C — Un candidat à une mission NE PEUT PAS se mettre 'hired'
 -- ----------------------------------------------------------------------------
 -- Setup : une mission créée par u_owner, une candidature de u_third
-select tests.act_as(:'u_owner', '["publish_mission"]');
+select tests.act_as('11111111-1111-1111-1111-111111111111', '["publish_mission"]');
 select lives_ok(
   $$ insert into public.missions(id, creator_id, title, status)
-     values ('bbbbbbbb-0000-0000-0000-000000000001', :'u_owner'::uuid, 'Sous-traitance Lyon', 'published') $$,
+     values ('bbbbbbbb-0000-0000-0000-000000000001', '11111111-1111-1111-1111-111111111111'::uuid, 'Sous-traitance Lyon', 'published') $$,
   '2C (setup) : mission créée');
 
-select tests.act_as(:'u_third', '["access_subcontracting"]');
+select tests.act_as('33333333-3333-3333-3333-333333333333', '["access_subcontracting"]');
 select lives_ok(
   $$ insert into public.mission_applications(id, mission_id, applicant_user_id, status)
-     values ('cccccccc-0000-0000-0000-000000000001','bbbbbbbb-0000-0000-0000-000000000001', :'u_third'::uuid, 'submitted') $$,
+     values ('cccccccc-0000-0000-0000-000000000001','bbbbbbbb-0000-0000-0000-000000000001', '33333333-3333-3333-3333-333333333333'::uuid, 'submitted') $$,
   '2C (setup) : candidature soumise');
 
 -- Le candidat tente de se mettre 'hired' -> refus (with check = withdrawn seulement)
@@ -131,14 +131,17 @@ select lives_ok(
 -- ----------------------------------------------------------------------------
 -- 3B — recalc_entity_capabilities ne révoque pas un admin_grant manuel
 -- ----------------------------------------------------------------------------
--- u_editor reçoit publish_job par admin_grant, sans entité vérifiée
+-- u_editor reçoit publish_job par admin_grant, sans entité vérifiée.
+-- Contexte privilégié (setup) : l'écriture de user_capabilities exige admin_panel
+-- côté RLS ; on repasse en rôle service pour poser la donnée de test.
+set local role postgres;
 insert into public.user_capabilities(user_id, capability, source)
-  values (:'u_editor'::uuid, 'publish_job', 'admin_grant')
+  values ('22222222-2222-2222-2222-222222222222'::uuid, 'publish_job', 'admin_grant')
   on conflict (user_id, capability) do update set source='admin_grant', revoked_at=null;
-select public.recalc_entity_capabilities(:'u_editor'::uuid);
+select public.recalc_entity_capabilities('22222222-2222-2222-2222-222222222222'::uuid);
 select is(
   (select revoked_at from public.user_capabilities
-   where user_id= :'u_editor'::uuid and capability='publish_job'),
+   where user_id= '22222222-2222-2222-2222-222222222222'::uuid and capability='publish_job'),
   NULL,
   '3B : recalc ne révoque pas un publish_job accordé par admin_grant');
 
@@ -172,16 +175,16 @@ insert into public.articles(id, author_id, title, slug, status, published_at)
   on conflict (id) do nothing;
 
 -- Un tiers lit l'article publié : OK
-select tests.act_as(:'u_third');
+select tests.act_as('33333333-3333-3333-3333-333333333333');
 select isnt(
   (select count(*)::int from public.articles where id='dddddddd-0000-0000-0000-000000000001'),
   0, 'B : un article publié est lisible par un tiers');
 
 -- Soft-delete de l'article (par l'auteur), puis un tiers ne doit plus le voir
-select tests.act_as(:'u_owner');
+select tests.act_as('11111111-1111-1111-1111-111111111111');
 update public.articles set deleted_at=now(), status='published'
   where id='dddddddd-0000-0000-0000-000000000001';
-select tests.act_as(:'u_third');
+select tests.act_as('33333333-3333-3333-3333-333333333333');
 select is(
   (select count(*)::int from public.articles where id='dddddddd-0000-0000-0000-000000000001'),
   0, 'B : un article publié puis soft-deleté n''est plus lisible en accès direct par un tiers');
@@ -190,14 +193,14 @@ select is(
 -- Point 2 — Un membre d'entité PEUT uploader un média d'entité (logo/photo)
 -- ----------------------------------------------------------------------------
 -- u_owner est membre owner de l'entité aaaaaaaa...0001 (setup 1A/1B)
-select tests.act_as(:'u_owner');
+select tests.act_as('11111111-1111-1111-1111-111111111111');
 select lives_ok(
   $$ insert into public.media(owner_type, owner_id, url, kind)
      values ('entity','aaaaaaaa-0000-0000-0000-000000000001','https://s/logo.png','logo') $$,
   'Point 2 : un membre d''entité peut insérer un média d''entité (logo)');
 
 -- Un tiers non-membre NE PEUT PAS uploader un média sur cette entité
-select tests.act_as(:'u_third');
+select tests.act_as('33333333-3333-3333-3333-333333333333');
 select throws_ok(
   $$ insert into public.media(owner_type, owner_id, url, kind)
      values ('entity','aaaaaaaa-0000-0000-0000-000000000001','https://s/pirate.png','logo') $$,
@@ -206,7 +209,7 @@ select throws_ok(
 -- Un utilisateur peut uploader son propre média de profil (owner_type='profile')
 select lives_ok(
   $$ insert into public.media(owner_type, owner_id, url, kind)
-     values ('profile', :'u_third'::uuid, 'https://s/avatar.png','avatar') $$,
+     values ('profile', '33333333-3333-3333-3333-333333333333'::uuid, 'https://s/avatar.png','avatar') $$,
   'Point 2 : un utilisateur peut insérer son propre média de profil');
 
 select * from finish();

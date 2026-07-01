@@ -146,7 +146,7 @@ create policy emembers_insert on public.entity_members for insert
   with check (
     public.is_entity_owner(entity_id, auth.uid())
     or ( auth.uid() = user_id and role = 'owner'                  -- 1B : premier owner sur une entité sans membre
-         and not exists (select 1 from public.entity_members m where m.entity_id = entity_members.entity_id) )
+         and not public.entity_has_members(entity_members.entity_id) )   -- helper SECURITY DEFINER (sinon RLS masque les membres existants)
     or public.has_capability('moderate') );
 -- 2A : un membre peut mettre à jour SA ligne (accepter l'invitation, se retirer) mais
 -- la modification du champ role est réservée owner/moderate — garantie par le trigger guard_member_role.
@@ -192,9 +192,19 @@ create policy articles_read on public.articles for select
           or public.has_capability('moderate') );
 create policy articles_insert on public.articles for insert
   with check ( auth.uid() = author_id and public.has_capability('write_article') );
+-- L'auteur cible ses propres articles (USING) ; le WITH CHECK borne l'état
+-- résultant : édition de contenu autorisée hors 'published' (draft/rejected/
+-- pending), et archivage/soft-delete depuis n'importe quel état. Un article
+-- publié NE PEUT PAS être édité en restant publié (révision = article enfant,
+-- F-17). Le durcissement fin des transitions (ex. published→draft) relèvera
+-- d'un trigger guard_article_transition en MVP 2.
 create policy articles_update on public.articles for update
-  using ( (auth.uid() = author_id and status in ('draft','rejected')) or public.has_capability('moderate') )
-  with check ( (auth.uid() = author_id) or public.has_capability('moderate') );
+  using ( auth.uid() = author_id or public.has_capability('moderate') )
+  with check (
+    public.has_capability('moderate')
+    or ( auth.uid() = author_id
+         and ( status in ('draft','rejected','pending','archived')
+               or deleted_at is not null ) ) );
 create policy articles_delete on public.articles for delete
   using ( (auth.uid() = author_id and status = 'draft') or public.has_capability('moderate') );
 
@@ -274,8 +284,12 @@ create policy conn_read on public.connections for select
           or exists (select 1 from public.profiles p where p.user_id = to_user_id and p.visibility='public') );
 create policy conn_insert on public.connections for insert
   with check ( auth.uid() = from_user_id and not public.is_blocked(to_user_id, auth.uid()) );
+-- 2B : seul le destinataire accepte. USING inclut les deux participants pour que
+-- la ligne soit VISIBLE à l'émetteur (sinon un UPDATE hors périmètre touche 0
+-- ligne sans erreur) ; le WITH CHECK restreint la nouvelle valeur au destinataire,
+-- donc une auto-acceptation par l'émetteur VIOLE le check et lève une erreur.
 create policy conn_update on public.connections for update
-  using ( auth.uid() = to_user_id )                               -- 2B : seul le destinataire accepte
+  using ( auth.uid() = from_user_id or auth.uid() = to_user_id )
   with check ( auth.uid() = to_user_id );
 create policy conn_delete on public.connections for delete
   using ( auth.uid() = from_user_id or auth.uid() = to_user_id );

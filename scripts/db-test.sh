@@ -50,6 +50,10 @@ echo "→ 4/4 Tests pgTAP (21 scénarios RLS & sécurité)"
 # search_path qui couvre public + extensions + tests.
 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -c "create extension if not exists pgtap;"
 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -c "create schema if not exists tests;"
+# tests.act_as est appelé alors que le rôle courant est déjà `authenticated` :
+# ce rôle a besoin de USAGE sur le schéma `tests` (EXECUTE sur les fonctions est
+# accordé à PUBLIC par défaut). Nécessaire aussi sur un vrai Supabase.
+psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -c "grant usage on schema tests to anon, authenticated, service_role;"
 PGOPTIONS="--search_path=tests,public,extensions" \
   psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f "$ROOT/supabase/tests/04_tests_pgtap.sql"
 
