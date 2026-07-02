@@ -1,9 +1,19 @@
-/** Connexion (placeholder Phase 0 — Supabase Auth email + OAuth en MVP 1). */
-export default function LoginPage() {
+import type { Metadata } from 'next';
+import { LoginForm } from '@/features/auth/components/login-form';
+
+export const metadata: Metadata = { title: 'Connexion', robots: { index: false } };
+
+/** F-02 — Connexion. `next` : deep-link de retour posé par le middleware. */
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ next?: string; error?: string }>;
+}) {
+  const { next, error } = await searchParams;
   return (
-    <main className="mx-auto flex min-h-screen max-w-sm flex-col justify-center gap-4 px-4">
-      <h1 className="text-h2 font-bold text-navy">Connexion</h1>
-      <p className="text-body text-grey">Formulaire email + OAuth — à venir (MVP 1).</p>
-    </main>
+    <>
+      <h1 className="mb-4 text-h3 font-bold text-navy">Connexion</h1>
+      <LoginForm next={next} initialError={error} />
+    </>
   );
 }
