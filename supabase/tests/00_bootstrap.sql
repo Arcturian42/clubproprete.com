@@ -28,10 +28,18 @@ $$;
 -- Le rôle de connexion (postgres/CI) doit pouvoir SET ROLE vers ces rôles.
 grant anon, authenticated, service_role to current_user;
 
--- Table auth.users minimale (id + email). Sur Supabase, gérée par le service Auth.
+-- Table auth.users minimale (colonnes utilisées par les seeds). Sur Supabase,
+-- gérée par le service Auth (les colonnes réelles sont plus nombreuses).
 create table if not exists auth.users (
-  id    uuid primary key default gen_random_uuid(),
-  email text unique
+  id                 uuid primary key default gen_random_uuid(),
+  email              text unique,
+  aud                text,
+  role               text,
+  email_confirmed_at timestamptz,
+  raw_app_meta_data  jsonb,
+  raw_user_meta_data jsonb,
+  created_at         timestamptz default now(),
+  updated_at         timestamptz default now()
 );
 
 -- auth.uid() : lit le claim `sub` du JWT simulé (request.jwt.claims).

@@ -227,8 +227,11 @@ create trigger trg_profiles_updated before update on public.profiles
 create or replace function public.handle_new_user()
 returns trigger language plpgsql security definer set search_path = public as $$
 begin
+  -- Slug provisoire garanti unique : UUID complet (32 hex). Un préfixe
+  -- tronqué peut collisionner (contrainte UNIQUE → signup en échec).
+  -- L'utilisateur obtient un slug lisible à l'onboarding/édition de profil.
   insert into public.profiles (user_id, slug)
-  values (new.id, 'u-' || left(replace(new.id::text,'-',''),12));
+  values (new.id, 'u-' || replace(new.id::text,'-',''));
   return new;
 end;
 $$;

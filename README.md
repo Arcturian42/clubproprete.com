@@ -27,19 +27,35 @@ cp .env.example .env.local   # remplir les clés Supabase (projet de test)
 pnpm dev
 ```
 
-## Phase 0 — le premier geste (impératif)
+## État d'avancement
 
-Le SQL a été vérifié structurellement mais **jamais exécuté** contre un vrai Postgres+PostGIS. **Avant tout build applicatif**, exécuter le socle et faire passer **les 21 tests pgTAP au vert** :
+**Phase 0 : VALIDÉE** — socle exécuté contre un vrai Postgres 16 + PostGIS + pgTAP :
+**21/21 tests verts**, RPC (0003) smoke-testées, seed dev **200 profils / 80 fiches /
+50 vérifiées** vérifié par exécution. 5 bugs d'exécution corrigés (dont un trou de
+sécurité RLS d'auto-promotion owner et une collision de slug au signup).
+
+**MVP 1 : construit** (auth, onboarding, profils, fiches 4 types, annuaire+recherche,
+vérification, back-office, design system v2 bleus/glass). Typecheck, lint, build,
+18 tests unitaires et 7 E2E : verts.
+
+### Il reste 3 gestes sur le projet Supabase (à faire ensemble)
+
+1. **Appliquer le socle** — SQL Editor → coller `supabase/apply_all.sql` (schéma+RLS+RPC) → Run.
+2. **Activer l'Auth Hook (3C)** — Authentication → Hooks → *Custom Access Token* →
+   `public.custom_access_token_hook`. Tester un vrai login (le format de retour est
+   la seule inconnue restante).
+3. **Optionnel** : seed d'amorçage — coller `supabase/seed/seed_dev.sql` (idempotent).
+
+Puis côté app : renseigner `.env.local` (cf. `.env.example`), `pnpm dev`.
+Buckets Storage (Annexe B) : à créer avant d'activer les uploads (logo/photos/CV).
 
 ```bash
-export DATABASE_URL="postgresql://postgres:[PWD]@db.tefjghkoawbbvtypdeoe.supabase.co:5432/postgres"
-pnpm db:test        # migrations → RLS → seed → 21 tests pgTAP
-pnpm db:types       # régénère src/types/database.types.ts
+pnpm db:test        # rejouer le socle + 21 pgTAP (DATABASE_URL requis)
+pnpm db:types       # régénérer les types une fois le projet lié
 ```
 
-Puis valider le point **3C** : format de retour de `custom_access_token_hook` contre la version d'Auth installée (bloque toute connexion si erroné).
-
-> CI : le job `db` rejoue ce socle contre un Postgres+PostGIS nu via des shims `auth`/`tests` (`USE_AUTH_SHIMS=1`). Le run **autoritaire** reste le projet Supabase de test.
+> CI : le job `db` rejoue ce socle contre un Postgres+PostGIS nu via des shims
+> `auth`/`tests` (`USE_AUTH_SHIMS=1`).
 
 ## Structure
 
@@ -65,7 +81,7 @@ supabase/
 |---|---|
 | `pnpm dev` / `build` / `start` | Next.js |
 | `pnpm typecheck` / `lint` / `test` | qualité + tests unitaires (Vitest) |
-| `pnpm test:e2e` | Playwright (parcours F-01→F-25) |
+| `pnpm test:e2e` | Playwright (7 specs publics ; `PLAYWRIGHT_CHROMIUM_EXECUTABLE` si navigateur préinstallé) |
 | `pnpm db:test` | socle SQL + 21 tests pgTAP |
 | `pnpm db:types` | régénère les types DB |
 

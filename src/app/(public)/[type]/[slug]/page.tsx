@@ -39,7 +39,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { type: typeSlug, slug } = await params;
   const type = entitySlugToType(typeSlug);
-  if (!type) return { title: 'Fiche introuvable' };
+  if (!type) notFound();
   const detail = await getPublicEntityBySlug(type, slug);
   if (!detail) return { title: 'Fiche introuvable' };
   const name =

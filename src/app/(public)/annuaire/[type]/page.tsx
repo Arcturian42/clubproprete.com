@@ -47,6 +47,16 @@ interface SearchParams {
   cursor?: string;
 }
 
+/**
+ * Les 4 types d'annuaire sont les seuls params valides : dynamicParams=false
+ * fait rejeter tout autre slug en 404 par le routeur AVANT le streaming
+ * (avec loading.tsx, un notFound() dans la page partirait après un shell 200).
+ */
+export function generateStaticParams() {
+  return Object.values(DIRECTORY_TYPE_SLUGS).map((slug) => ({ type: slug }));
+}
+export const dynamicParams = false;
+
 export async function generateMetadata({
   params,
   searchParams,
@@ -57,7 +67,9 @@ export async function generateMetadata({
   const { type: typeSlug } = await params;
   const sp = await searchParams;
   const type = directorySlugToType(typeSlug);
-  if (!type) return { title: 'Annuaire' };
+  // notFound() dès les métadonnées : avec loading.tsx, le streaming aurait
+  // déjà envoyé un 200 avant le notFound() du corps de page.
+  if (!type) notFound();
   const hasFilters = Boolean(sp.q || sp.service || sp.region || sp.verifie || sp.cursor);
   return {
     title: `${TITLES[type].h1} — annuaire`,

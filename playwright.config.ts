@@ -13,6 +13,11 @@ export default defineConfig({
   use: {
     baseURL: process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000',
     trace: 'on-first-retry',
+    // Environnements avec navigateur préinstallé (ex. sandbox Claude Code web) :
+    // PLAYWRIGHT_CHROMIUM_EXECUTABLE=/opt/pw-browsers/chromium
+    launchOptions: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE
+      ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE }
+      : {},
   },
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
   webServer: {
