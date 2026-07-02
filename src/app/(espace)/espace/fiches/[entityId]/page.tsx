@@ -80,10 +80,17 @@ export default async function EditEntityPage({
         <h1 className="text-h2 font-bold text-navy">
           {initial.name || ENTITY_TYPE_LABELS[entity.type]}
         </h1>
-        {entity.verified && (
+        {entity.verified ? (
           <span className="inline-flex items-center gap-1 text-body font-medium text-teal">
             <BadgeCheck className="h-5 w-5" aria-hidden /> Vérifiée
           </span>
+        ) : (
+          <Link
+            href={`/espace/fiches/${entity.id}/verification`}
+            className="inline-flex min-h-11 items-center gap-1 rounded-full border border-teal px-4 py-1.5 text-caption font-medium text-teal hover:bg-teal hover:text-white"
+          >
+            <BadgeCheck className="h-4 w-4" aria-hidden /> Demander la vérification
+          </Link>
         )}
       </div>
       <EntityForm initial={initial} />
