@@ -35,3 +35,20 @@ Card (entité/profil/article/offre/**ressource — `cover_image` optionnel, T6**
 
 ---
 
+
+## D.5 — Évolution v2 (décision produit, juillet 2026)
+
+Directive du propriétaire produit : design moderne, glassmorphism, variantes de
+bleu (niche propreté). Appliquée dans `tailwind.config.ts` + `globals.css` :
+
+| Sujet | Décision |
+|---|---|
+| Typographie | **Geist Sans / Geist Mono** auto-hébergées (`geist` npm, `next/font`), tracking resserré sur les display |
+| Palette | 100 % famille bleue : navy `#0A2540` / blue `#0A66C2` / blue-deep `#084D92` / sky `#7CC4F8` (décoratif) / ice `#F2F7FC` / navy-800/900 (dégradés). `teal` conservé pour vérifié/succès. **AA inchangé pour tout texte.** |
+| Glassmorphism | Classes `.glass` / `.glass-dark` (backdrop-filter + bord clair + reflet), **surfaces publiques uniquement** (header sticky, hero, auth). Fallback opaque `@supports` + `prefers-reduced-transparency`. Jamais sur les écrans de données denses. |
+| Fond hero | `.hero-water` : dégradés radiaux superposés dans la même famille de bleus (jamais de violet) |
+| Élévation | `shadow-lift` / `shadow-lift-lg` ; hover CTA = translation 1px + `blue-deep` (pas de filtre brightness) |
+| Anti-slop | Pas d'emoji dans l'UI, pas de trois cartes jumelles (bento asymétrique / bande numérotée), 1 famille d'icônes (lucide), 1 accent verrouillé (blue) |
+
+Les contrastes D.1 restent la référence de conformité : `sky` et `ice` sont
+décoratifs et interdits comme couleur de texte sur fond clair.

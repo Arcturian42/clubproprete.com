@@ -12,15 +12,7 @@
   }
 
   body {
-    @apply bg-white text-navy antialiased;
-    font-family:
-      system-ui,
-      -apple-system,
-      'Segoe UI',
-      Roboto,
-      Helvetica,
-      Arial,
-      sans-serif;
+    @apply bg-white font-sans text-navy antialiased;
   }
 
   /* Focus visible clavier (WCAG 2.1 AA) */
@@ -37,5 +29,58 @@
       animation-iteration-count: 1 !important;
       transition-duration: 0.01ms !important;
     }
+  }
+}
+
+@layer components {
+  /*
+   * Verre dépoli — surfaces publiques uniquement (header, hero, panneaux
+   * marketing). Approximation web assumée : backdrop-filter + bord clair +
+   * reflet haut. Fallback opaque si transparence réduite ou non supportée.
+   */
+  .glass {
+    @apply border border-white/50 bg-white/65 shadow-glass;
+    -webkit-backdrop-filter: blur(16px) saturate(1.4);
+    backdrop-filter: blur(16px) saturate(1.4);
+  }
+
+  .glass-dark {
+    @apply border border-white/15 bg-navy-900/55 shadow-glass-dark;
+    -webkit-backdrop-filter: blur(18px) saturate(1.3);
+    backdrop-filter: blur(18px) saturate(1.3);
+  }
+
+  @supports not (backdrop-filter: blur(1px)) {
+    .glass {
+      @apply bg-white shadow-lift;
+    }
+    .glass-dark {
+      @apply bg-navy-900;
+    }
+  }
+
+  @media (prefers-reduced-transparency: reduce) {
+    .glass {
+      -webkit-backdrop-filter: none;
+      backdrop-filter: none;
+      @apply bg-white;
+    }
+    .glass-dark {
+      -webkit-backdrop-filter: none;
+      backdrop-filter: none;
+      @apply bg-navy-900;
+    }
+  }
+
+  /*
+   * Fond « eau claire » du hero : superposition de dégradés radiaux dans la
+   * même famille de bleus (jamais de violet). Purement décoratif.
+   */
+  .hero-water {
+    background-color: theme('colors.navy-900');
+    background-image:
+      radial-gradient(52rem 30rem at 82% -12%, rgba(124, 196, 248, 0.22), transparent 62%),
+      radial-gradient(40rem 26rem at -8% 30%, rgba(10, 102, 194, 0.38), transparent 60%),
+      radial-gradient(60rem 40rem at 50% 118%, rgba(14, 48, 87, 0.9), transparent 70%);
   }
 }
