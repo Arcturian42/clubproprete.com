@@ -11,7 +11,8 @@ const csp = [
   `img-src 'self' data: blob: ${supabaseUrl}`,
   "script-src 'self' 'unsafe-inline'",
   "style-src 'self' 'unsafe-inline'",
-  `connect-src 'self' ${supabaseUrl} wss://${supabaseUrl.replace('https://', '')}`,
+  // geo.api.gouv.fr : autocomplétion ville (INSEE) ; recherche-entreprises : SIRET (PRD 10.2)
+  `connect-src 'self' ${supabaseUrl} wss://${supabaseUrl.replace('https://', '')} https://geo.api.gouv.fr https://recherche-entreprises.api.gouv.fr`,
   "font-src 'self'",
   "frame-ancestors 'none'",
   "base-uri 'self'",

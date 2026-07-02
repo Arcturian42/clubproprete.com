@@ -3,12 +3,11 @@
  * Middleware auth : route protégée sans session → 302 /login?next=...
  */
 import type { Capability } from './capabilities';
+import type { EntityType } from '@/referentiels';
 
 /**
  * Segments réservés en tête d'URL — protègent la route dynamique /[type]/[slug]
  * (fiche entité) des collisions avec les routes publiques statiques.
- * Un segment de premier niveau ∈ RESERVED_TOP_SEGMENTS n'est jamais traité
- * comme un type d'entité.
  */
 export const RESERVED_TOP_SEGMENTS = [
   'annuaire',
@@ -26,18 +25,43 @@ export const RESERVED_TOP_SEGMENTS = [
   'login',
   'signup',
   'reset',
+  'auth',
   'espace',
   'admin',
   'api',
 ] as const;
 
-/** Slugs d'URL pour le type d'entité (route /[type]/{slug}). */
-export const ENTITY_TYPE_SLUGS = {
+/** Slugs d'URL de la fiche entité publique : /{type}/{slug} (singulier). */
+export const ENTITY_TYPE_SLUGS: Record<EntityType, string> = {
   company: 'societe',
   supplier: 'fournisseur',
   training_org: 'centre-formation',
   independent: 'independant',
-} as const;
+};
+
+/** Slugs d'URL de l'annuaire : /annuaire/{type} (pluriel). */
+export const DIRECTORY_TYPE_SLUGS: Record<EntityType, string> = {
+  company: 'societes',
+  supplier: 'fournisseurs',
+  training_org: 'centres-formation',
+  independent: 'independants',
+};
+
+/** Résolution inverse slug d'annuaire → entity_type (404 sinon). */
+export function directorySlugToType(slug: string): EntityType | null {
+  const found = (Object.entries(DIRECTORY_TYPE_SLUGS) as [EntityType, string][]).find(
+    ([, s]) => s === slug,
+  );
+  return found ? found[0] : null;
+}
+
+/** Résolution inverse slug de fiche → entity_type (404 sinon). */
+export function entitySlugToType(slug: string): EntityType | null {
+  const found = (Object.entries(ENTITY_TYPE_SLUGS) as [EntityType, string][]).find(
+    ([, s]) => s === slug,
+  );
+  return found ? found[0] : null;
+}
 
 /** Préfixes noindex (espace membre + back-office). */
 export const NOINDEX_PREFIXES = ['/espace', '/admin'] as const;
