@@ -188,8 +188,9 @@ for (const f of functions) {
   const returns = /^SETOF/i.test(f.result || '')
     ? `${sqlScalarToTs(f.result)}[]`
     : sqlScalarToTs(f.result || 'void');
+  const argsType = args ? `{ ${args} }` : 'Record<PropertyKey, never>';
   out += `      ${f.name}: {
-        Args: { ${args} };
+        Args: ${argsType};
         Returns: ${returns};
       };
 `;

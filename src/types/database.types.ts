@@ -1485,6 +1485,10 @@ export type Database = {
     };
     Views: Record<string, never>;
     Functions: {
+      entity_completion_score: {
+        Args: { p_entity_id: string };
+        Returns: number;
+      };
       entity_has_members: {
         Args: { p_entity_id: string };
         Returns: boolean;
@@ -1509,9 +1513,21 @@ export type Database = {
         Args: { p_entity_id: string; p_user_id: string };
         Returns: boolean;
       };
+      rebuild_search_index: {
+        Args: Record<PropertyKey, never>;
+        Returns: undefined;
+      };
       recalc_entity_capabilities: {
         Args: { p_user_id: string };
         Returns: undefined;
+      };
+      search_directory: {
+        Args: { p_type: unknown; p_service: string; p_region: string; p_verified: boolean; p_q: string; p_cursor_score: number; p_cursor_id: string; p_limit: number };
+        Returns: unknown;
+      };
+      search_suggest: {
+        Args: { p_q: string; p_limit: number };
+        Returns: unknown;
       };
     };
     Enums: {

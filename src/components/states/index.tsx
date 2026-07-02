@@ -61,6 +61,24 @@ export function ErrorState({
   );
 }
 
+/** Variante RSC de l'état d'erreur (sans callback client) : message + lien de reprise. */
+export function ErrorStateStatic({ message, className }: { message: string; className?: string }) {
+  return (
+    <div
+      role="alert"
+      className={cn(
+        'flex flex-col items-center justify-center gap-2 rounded-md border border-error/30 bg-white p-6 text-center',
+        className,
+      )}
+    >
+      <p className="text-body text-error">{message}</p>
+      <a href="" className="text-caption font-medium text-navy underline">
+        Recharger la page
+      </a>
+    </div>
+  );
+}
+
 /** Skeleton : layout stable pendant le chargement (pas de saut de mise en page). */
 export function Skeleton({ className }: { className?: string }) {
   return <div className={cn('animate-pulse rounded-sm bg-bg-light', className)} aria-hidden />;
