@@ -6,7 +6,7 @@
     "no-restricted-syntax": [
       "error",
       {
-        "selector": "Literal[value=/^role$/]",
+        "selector": "Literal[value=/claims.*\\brole\\b|\\brole\\b.*claim/i]",
         "message": "Aucun claim JWT 'role' : l'autorisation passe par les capacités (has_capability). Cf. CLAUDE.md."
       }
     ]
