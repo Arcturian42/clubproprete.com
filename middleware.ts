@@ -51,7 +51,7 @@ export async function middleware(request: NextRequest) {
   }
 
   // 3. Garde de capacité (routing ; la RLS reste l'autorité en base)
-  if (isProtected && user) {
+  if (isProtected && user && supabase) {
     const {
       data: { session },
     } = await supabase.auth.getSession();

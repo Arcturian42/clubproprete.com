@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
+import { SUPABASE_URL, SUPABASE_ANON_KEY, isSupabaseConfigured } from './config';
 import type { Database } from '@/types/database.types';
 
 type CookieToSet = { name: string; value: string; options?: CookieOptions };
@@ -12,10 +13,13 @@ type CookieToSet = { name: string; value: string; options?: CookieOptions };
 export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({ request });
 
-  const supabase = createServerClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
+  // Env Supabase absente (ex. premier déploiement avant saisie des clés) :
+  // pas d'appel réseau, tout le monde est anonyme — le site public fonctionne.
+  if (!isSupabaseConfigured) {
+    return { response, supabase: null, user: null };
+  }
+
+  const supabase = createServerClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY, {
       cookies: {
         getAll() {
           return request.cookies.getAll();
