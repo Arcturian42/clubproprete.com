@@ -1,15 +1,15 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { MapPin, BadgeCheck, UserPlus, MessageSquare } from 'lucide-react';
-import { getPublicProfileBySlug } from '@/features/profiles/queries';
+import { MapPin, BadgeCheck } from 'lucide-react';
+import { getPublicProfileBySlug, getProfileRecommendations } from '@/features/profiles/queries';
 import { getPublishedArticlesByAuthor } from '@/features/articles/queries';
+import { ProfileActions } from '@/features/social-graph/components/profile-actions';
+import { ReportButton } from '@/features/moderation/components/report-button';
 import { ENTITY_TYPE_SLUGS } from '@/config/routes';
 import { Avatar } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { EmptyState } from '@/components/states';
-import { buttonVariants } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
 
 /**
  * Profil public /p/{slug} (F-04, PRD 8) — Person + ProfilePage schema.org.
@@ -52,7 +52,10 @@ export default async function ProfilePublicPage({
 
   const { profile, skills, entities } = data;
   const name = `${profile.first_name ?? ''} ${profile.last_name ?? ''}`.trim() || 'Membre';
-  const articles = await getPublishedArticlesByAuthor(profile.user_id);
+  const [articles, recommendations] = await Promise.all([
+    getPublishedArticlesByAuthor(profile.user_id),
+    getProfileRecommendations(profile.user_id),
+  ]);
 
   const jsonLd = {
     '@context': 'https://schema.org',
@@ -96,14 +99,7 @@ export default async function ProfilePublicPage({
               )}
             </p>
           </div>
-          <div className="flex gap-2">
-            <Link href="/signup" className={cn(buttonVariants({ size: 'sm' }))}>
-              <UserPlus className="h-4 w-4" aria-hidden /> Se connecter
-            </Link>
-            <Link href="/signup" className={cn(buttonVariants({ variant: 'secondary', size: 'sm' }))}>
-              <MessageSquare className="h-4 w-4" aria-hidden /> Message
-            </Link>
-          </div>
+          <ProfileActions targetUserId={profile.user_id} targetName={name} />
         </div>
       </header>
 
@@ -150,16 +146,40 @@ export default async function ProfilePublicPage({
             )}
           </section>
 
-          {/* Recommandations (MVP 3) */}
+          {/* Recommandations (F-09) */}
           <section aria-labelledby="recos">
             <h2 id="recos" className="mb-2 text-h4 font-semibold text-navy">
-              Recommandations
+              Recommandations{' '}
+              {recommendations.length > 0 && (
+                <span className="text-caption font-normal text-grey">({recommendations.length})</span>
+              )}
             </h2>
-            <EmptyState
-              title="Pas encore de recommandation."
-              description="Les recommandations entre professionnels arrivent avec le réseau (MVP 3)."
-            />
+            {recommendations.length > 0 ? (
+              <ul className="space-y-3">
+                {recommendations.map((r) => (
+                  <li key={r.id} className="rounded-md border border-navy/10 bg-white p-4">
+                    <p className="text-body text-navy">« {r.text} »</p>
+                    <p className="mt-2 flex items-center gap-2 text-caption text-grey">
+                      {r.from ? (
+                        <Link href={`/p/${r.from.slug}`} className="font-medium text-navy hover:text-blue">
+                          {`${r.from.first_name ?? ''} ${r.from.last_name ?? ''}`.trim() || 'Un pair'}
+                        </Link>
+                      ) : (
+                        'Un pair'
+                      )}
+                      {r.quality && <Badge variant="outline">{r.quality}</Badge>}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <EmptyState title="Pas encore de recommandation." />
+            )}
           </section>
+
+          <div className="pt-2">
+            <ReportButton targetType="profile" targetId={profile.user_id} />
+          </div>
         </div>
 
         <aside className="space-y-6">

@@ -1,14 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import {
-  MapPin,
-  BadgeCheck,
-  Globe,
-  MessageSquare,
-  ExternalLink,
-  Building2,
-} from 'lucide-react';
+import { MapPin, BadgeCheck, Globe, ExternalLink, Building2 } from 'lucide-react';
 import { getPublicEntityBySlug } from '@/features/entities/queries';
 import { entitySlugToType } from '@/config/routes';
 import {
@@ -21,8 +14,8 @@ import {
 } from '@/referentiels/labels';
 import type { ServiceType, ClientSegment, SupplierFamily, TrainingCertification } from '@/referentiels';
 import { Badge } from '@/components/ui/badge';
-import { buttonVariants } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
+import { ContactEntityButton } from '@/features/messaging/components/contact-entity-button';
+import { ReportButton } from '@/features/moderation/components/report-button';
 
 /**
  * Fiche entité publique /{type}/{slug} (F-05/F-08) — LocalBusiness schema.org,
@@ -128,9 +121,7 @@ export default async function EntityPublicPage({
               )}
             </p>
           </div>
-          <Link href="/signup" className={cn(buttonVariants({ size: 'sm' }))}>
-            <MessageSquare className="h-4 w-4" aria-hidden /> Contacter
-          </Link>
+          <ContactEntityButton entityId={entity.id} />
         </div>
       </header>
 
@@ -248,6 +239,9 @@ export default async function EntityPublicPage({
               .
             </p>
           )}
+          <div className="pt-2">
+            <ReportButton targetType="entity" targetId={entity.id} />
+          </div>
         </aside>
       </div>
     </main>
