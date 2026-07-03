@@ -3,6 +3,7 @@ import { requireUser } from '@/lib/auth/session';
 import { createClient } from '@/lib/supabase/server';
 import { decideVerification } from '@/features/verification/actions';
 import { decideAuthorApplication } from '@/features/moderation/actions';
+import { decideMembership } from '@/features/association/actions';
 import { SENIORITY_LABELS, HEADCOUNT_LABELS } from '@/features/verification/schemas';
 import { ENTITY_TYPE_LABELS } from '@/referentiels/labels';
 import type { EntityType } from '@/referentiels';
@@ -35,7 +36,7 @@ export default async function DemandesPage({
   const supabase = await createClient();
 
   // RLS verif_read : moderate voit tout.
-  const [{ data: requests, error }, { data: authorApps }] = await Promise.all([
+  const [{ data: requests, error }, { data: authorApps }, { data: memberships }] = await Promise.all([
     supabase
       .from('verification_requests')
       .select('id, entity_id, status, seniority, headcount, requested_slots, created_at, entities!inner(id, slug, type, city_name)')
@@ -46,6 +47,11 @@ export default async function DemandesPage({
       .select('id, user_id, expertise, motivation, created_at, profiles!inner(slug, first_name, last_name)')
       .eq('status', 'pending')
       .order('created_at', { ascending: true }),
+    supabase
+      .from('association_memberships')
+      .select('id, user_id, requested_at, profiles!inner(slug, first_name, last_name)')
+      .eq('status', 'pending')
+      .order('requested_at', { ascending: true }),
   ]);
 
   return (
@@ -189,6 +195,47 @@ export default async function DemandesPage({
                   </form>
                   <form action={decideAuthorApplication} className="flex flex-wrap items-end gap-2">
                     <input type="hidden" name="applicationId" value={a.id} />
+                    <input type="hidden" name="decision" value="rejected" />
+                    <input
+                      name="reason"
+                      required
+                      minLength={3}
+                      className="min-h-11 w-56 rounded-sm border border-navy/15 px-3 py-2 text-body"
+                      placeholder="Motif de refus"
+                      aria-label="Motif de refus"
+                    />
+                    <Button type="submit" variant="destructive" size="sm">Refuser</Button>
+                  </form>
+                </div>
+              </Card>
+            );
+          })
+        )}
+      </div>
+
+      <h2 className="mt-10 text-h4 font-semibold text-navy">Adhésions à l&apos;association</h2>
+      <div className="mt-3 space-y-4">
+        {!memberships || memberships.length === 0 ? (
+          <EmptyState title="Aucune candidature d'adhésion en attente." />
+        ) : (
+          memberships.map((m) => {
+            const p = m.profiles as unknown as { slug: string; first_name: string | null; last_name: string | null };
+            return (
+              <Card key={m.id}>
+                <p className="text-body font-semibold text-navy">
+                  {`${p?.first_name ?? ''} ${p?.last_name ?? ''}`.trim() || p?.slug}
+                </p>
+                <p className="text-caption text-grey">
+                  Demandé le {new Date(m.requested_at).toLocaleDateString('fr-FR')}
+                </p>
+                <div className="mt-4 flex flex-wrap items-end gap-3 border-t border-navy/10 pt-4">
+                  <form action={decideMembership}>
+                    <input type="hidden" name="membershipId" value={m.id} />
+                    <input type="hidden" name="decision" value="approved" />
+                    <Button type="submit" size="sm">Approuver</Button>
+                  </form>
+                  <form action={decideMembership} className="flex flex-wrap items-end gap-2">
+                    <input type="hidden" name="membershipId" value={m.id} />
                     <input type="hidden" name="decision" value="rejected" />
                     <input
                       name="reason"
