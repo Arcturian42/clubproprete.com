@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { MapPin, BadgeCheck, UserPlus, MessageSquare } from 'lucide-react';
 import { getPublicProfileBySlug } from '@/features/profiles/queries';
+import { getPublishedArticlesByAuthor } from '@/features/articles/queries';
 import { ENTITY_TYPE_SLUGS } from '@/config/routes';
 import { Avatar } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -51,6 +52,7 @@ export default async function ProfilePublicPage({
 
   const { profile, skills, entities } = data;
   const name = `${profile.first_name ?? ''} ${profile.last_name ?? ''}`.trim() || 'Membre';
+  const articles = await getPublishedArticlesByAuthor(profile.user_id);
 
   const jsonLd = {
     '@context': 'https://schema.org',
@@ -119,15 +121,33 @@ export default async function ProfilePublicPage({
             )}
           </section>
 
-          {/* Publications (MVP 2) */}
+          {/* Publications (F-13 : articles publiés de l'auteur) */}
           <section aria-labelledby="publications">
             <h2 id="publications" className="mb-2 text-h4 font-semibold text-navy">
               Publications
             </h2>
-            <EmptyState
-              title="Aucun article publié."
-              description="Les articles du média communautaire s'afficheront ici (MVP 2)."
-            />
+            {articles.length > 0 ? (
+              <ul className="space-y-3">
+                {articles.map((a) => (
+                  <li key={a.id}>
+                    <Link
+                      href={`/blog/${a.slug}`}
+                      className="block rounded-md border border-navy/10 bg-white p-3 hover:border-blue"
+                    >
+                      <p className="text-body font-medium text-navy">{a.title}</p>
+                      {a.excerpt && <p className="mt-1 line-clamp-2 text-caption text-grey">{a.excerpt}</p>}
+                      {a.published_at && (
+                        <p className="mt-1 text-caption text-grey">
+                          {new Date(a.published_at).toLocaleDateString('fr-FR')}
+                        </p>
+                      )}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <EmptyState title="Aucun article publié." />
+            )}
           </section>
 
           {/* Recommandations (MVP 3) */}
