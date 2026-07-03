@@ -12,6 +12,7 @@ import {
   FileText,
   Handshake,
   Settings,
+  Bell,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -23,6 +24,7 @@ const ITEMS = [
   { href: '/espace/profil', label: 'Mon profil', icon: User, mobile: true },
   { href: '/espace/reseau', label: 'Mon réseau', icon: Users, mobile: true },
   { href: '/espace/messages', label: 'Messages', icon: MessageSquare, mobile: true },
+  { href: '/espace/notifications', label: 'Notifications', icon: Bell, mobile: false },
   { href: '/espace/fiches', label: 'Mes fiches', icon: Building2, mobile: true },
   { href: '/espace/redaction', label: 'Espace rédaction', icon: PenSquare, mobile: false },
   { href: '/espace/offres', label: 'Mes offres', icon: Briefcase, mobile: false },

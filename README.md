@@ -34,9 +34,15 @@ pnpm dev
 50 vérifiées** vérifié par exécution. 5 bugs d'exécution corrigés (dont un trou de
 sécurité RLS d'auto-promotion owner et une collision de slug au signup).
 
-**MVP 1 : construit** (auth, onboarding, profils, fiches 4 types, annuaire+recherche,
-vérification, back-office, design system v2 bleus/glass). Typecheck, lint, build,
-18 tests unitaires et 7 E2E : verts.
+**MVP 1 → 4 : construits et déployés** sur Vercel (`clubproprete-com.vercel.app`).
+
+- **MVP 1** — auth, onboarding, profils, fiches 4 types, annuaire+recherche, vérification, back-office
+- **MVP 2** — articles (éditeur Markdown sanitizé, 3 piles, blog), candidature rédacteur, ressources, notifications in-app, **modération** (signalements, flagging, auto-hide, récidive)
+- **MVP 3** — graphe social (connexions/suivi/recommandations/blocage), messagerie 1-1 Realtime + fallback, contact fiche (F-24)
+- **MVP 4** — emploi (offres/candidatures/alertes), association (adhésion→capacités), sous-traitance (missions)
+
+Design system v2 (Geist, palette bleus, glassmorphism). Typecheck, lint, build (48 routes),
+18 tests unitaires et 7 E2E : verts. SQL validé 21/21 pgTAP + seed 200/80/50 (Postgres réel).
 
 ### Il reste 3 gestes sur le projet Supabase (à faire ensemble)
 
